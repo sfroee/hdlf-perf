@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hdlf-api-test-config
+data:
+  files_rest_api: "your-hdl-instance.files.your-hdl-cluster-endpoint"
+  container: "your-container-id"
+  num_requests: "1000"
+  debug: "false"
+  config.json: |
+    {
+      "files_rest_api": "your-hdl-instance.files.your-hdl-cluster-endpoint",
+      "container": "your-container-id",
+      "crt_path": "/certs/client.crt",
+      "key_path": "/certs/client.key",
+      "num_requests": 1000,
+      "port": 443,
+      "output_path": "/data/results.json"
+      debug: false
+    }

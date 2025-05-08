@@ -1,0 +1,37 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: hdlf-api-test-cronjob
+spec:
+  schedule: "0 0 * * *"  # Run daily at midnight, adjust as needed
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: hdlf-api-test
+            image: hdlf-api-test:latest
+            imagePullPolicy: IfNotPresent
+            volumeMounts:
+            - name: config-volume
+              mountPath: /config
+            - name: certs-volume
+              mountPath: /certs
+              readOnly: true
+            - name: results-volume
+              mountPath: /data
+            env:
+            - name: OUTPUT_PATH
+              value: "/data/results_$(date +%Y%m%d_%H%M%S).json"
+          volumes:
+          - name: config-volume
+            configMap:
+              name: hdlf-api-test-config
+          - name: certs-volume
+            secret:
+              secretName: hdlf-api-certs
+          - name: results-volume
+            persistentVolumeClaim:
+              claimName: hdlf-api-test-results-pvc
+          restartPolicy: Never
