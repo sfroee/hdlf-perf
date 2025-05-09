@@ -15,6 +15,6 @@ data:
       "key_path": "/certs/client.key",
       "num_requests": 1000,
       "port": 443,
-      "output_path": "/data/results.json"
-      debug: false
+      "output_path": "/data/results.json",
+      "debug": false
     }
