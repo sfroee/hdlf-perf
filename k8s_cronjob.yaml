@@ -5,7 +5,7 @@ metadata:
   labels:
     app: hdlf-api-test
 spec:
-  schedule: "@every 59m"  # Run every 59 minutes
+  schedule: "@every 57m"  # Run every 57 minutes
   concurrencyPolicy: Forbid
   successfulJobsHistoryLimit: 2  # Keep only 2 successful job histories
   failedJobsHistoryLimit: 3      # Keep only 3 failed job history
@@ -16,7 +16,6 @@ spec:
         metadata:
           labels:
             app: hdlf-api-test
-            job-name: hdlf-api-test-cronjob  # Explicitly add job-name label
         spec:
           securityContext:
             runAsNonRoot: true
