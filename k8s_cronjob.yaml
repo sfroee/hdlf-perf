@@ -2,17 +2,44 @@ apiVersion: batch/v1
 kind: CronJob
 metadata:
   name: hdlf-api-test-cronjob
+  labels:
+    app: hdlf-api-test
 spec:
-  schedule: "0 0 * * *"  # Run daily at midnight, adjust as needed
+  schedule: "@every 59m"  # Run every 59 minutes
   concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 2  # Keep only 2 successful job histories
+  failedJobsHistoryLimit: 3      # Keep only 3 failed job history
   jobTemplate:
     spec:
+      ttlSecondsAfterFinished: 86400  # Delete job 24 hours after completion
       template:
+        metadata:
+          labels:
+            app: hdlf-api-test
+            job-name: hdlf-api-test-cronjob  # Explicitly add job-name label
         spec:
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            runAsGroup: 1000
+            fsGroup: 1000
           containers:
           - name: hdlf-api-test
-            image: hdlf-api-test:latest
+            image: sfroee/hdlf-api-test@sha256:2e16baf7f3c56988f3f607a6f5902c11bcb3b3a1f892114ff9398117c8d227c4
             imagePullPolicy: IfNotPresent
+            securityContext:
+              runAsNonRoot: true
+              allowPrivilegeEscalation: false
+              capabilities:
+                drop:
+                  - ALL
+            resources:
+              requests:
+                cpu: "500m"
+                memory: "256Mi"
+              limits:
+                cpu: "1"
+                memory: "512Mi"
             volumeMounts:
             - name: config-volume
               mountPath: /config
@@ -22,8 +49,30 @@ spec:
             - name: results-volume
               mountPath: /data
             env:
-            - name: OUTPUT_PATH
-              value: "/data/results_$(date +%Y%m%d_%H%M%S).json"
+            - name: FILES_REST_API
+              valueFrom:
+                configMapKeyRef:
+                  name: hdlf-api-test-config
+                  key: files_rest_api
+                  optional: true
+            - name: CONTAINER
+              valueFrom:
+                configMapKeyRef:
+                  name: hdlf-api-test-config
+                  key: container
+                  optional: true
+            - name: NUM_REQUESTS
+              valueFrom:
+                configMapKeyRef:
+                  name: hdlf-api-test-config
+                  key: num_requests
+                  optional: true
+            - name: DEBUG
+              valueFrom:
+                configMapKeyRef:
+                  name: hdlf-api-test-config
+                  key: debug
+                  optional: true
           volumes:
           - name: config-volume
             configMap:
@@ -35,3 +84,4 @@ spec:
             persistentVolumeClaim:
               claimName: hdlf-api-test-results-pvc
           restartPolicy: Never
+      backoffLimit: 3
