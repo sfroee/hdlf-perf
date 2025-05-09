@@ -10,10 +10,11 @@ This tool tests the performance of the HDLF API's WHOAMI operation by making 100
 - `config.json` - Configuration file template
 - Kubernetes resources:
   - `hdlf-api-test-job.yaml` - Job definition for running the test once
+  - `k8s_hdlf-api-test-job-debug.yaml` - Debug Job for checking response and status as expected.
   - `hdlf-api-test-configmap.yaml` - ConfigMap with configuration settings
   - `hdlf-api-certs-secret.yaml` - Secret template for storing certificates
   - `hdlf-api-test-results-pvc.yaml` - PersistentVolumeClaim for storing results
-  - `hdlf-api-test-cronjob.yaml` - CronJob for scheduled testing (optional)
+  - `hdlf-api-test-cronjob.yaml` - CronJob for scheduled testing (optional) - not used
 
 ## Step 1: Set up your environment
 
@@ -46,7 +47,7 @@ Ensure you have:
 2. Navigate to that directory
 3. Build the Docker image:
    ```bash
-   docker build -t hdlf-api-test:latest .
+   docker build --platform linux/amd64 -t hdlf-api-test:latest .
    ```
 4. Push to your container registry (if required):
    ```bash
@@ -101,36 +102,13 @@ Ensure you have:
 
    **Option 1**: Create a pod to access the PVC data:
    ```bash
-   kubectl apply -f - <<EOF
-   apiVersion: v1
-   kind: Pod
-   metadata:
-     name: results-reader
-   spec:
-     containers:
-     - name: results-reader
-       image: busybox
-       command: ["sleep", "3600"]
-       volumeMounts:
-       - name: results-volume
-         mountPath: /data
-     volumes:
-     - name: results-volume
-       persistentVolumeClaim:
-         claimName: hdlf-api-test-results-pvc
-   EOF
+   kubectl apply -f result_extraction_pod.yaml
    ```
 
    Then copy the results:
    ```bash
-   kubectl exec results-reader -- cat /data/results.json
-   # Or copy to your local machine:
-   kubectl cp results-reader:/data/results.json ./results.json
-   ```
-
-   **Option 2**: Forward the results directly:
-   ```bash
-   kubectl exec $(kubectl get pod -l job-name=hdlf-api-test-job -o jsonpath='{.items[0].metadata.name}') -- cat /data/results.json > results.json
+   kubectl exec results-reader -- ls /data/
+   kubectl cp results-reader:/data/ ./results/
    ```
 
 ## Understanding the Results
@@ -175,12 +153,15 @@ Key statistics include:
 
 2. **Running on a schedule**: Use the CronJob definition and adjust the schedule as needed (default is daily at midnight).
 
-3. **Saving results with timestamps**: For scheduled runs, the CronJob template automatically adds timestamps to result filenames.
+3. **Saving results with timestamps**: For scheduled runs, the CronJob template automatically adds timestamps to result filenames. - wasn't tested!!!
 
 4. **Running outside Kubernetes**: You can run the script directly with:
    ```bash
    python hdlf_api_perf_test.py --config /path/to/config.json
    ```
+
+5. **Running in debug mode or using the debug job**
+   This will print much more information, useful if requests will fail.
 
 ## Troubleshooting
 
