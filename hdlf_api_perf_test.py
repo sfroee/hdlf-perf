@@ -13,6 +13,7 @@ import numpy as np
 import argparse
 from datetime import datetime
 import logging
+import uuid
 
 # Configure logging
 logging.basicConfig(
@@ -81,6 +82,9 @@ def create_ssl_context(config):
 
 def whoami_request(config, ssl_context):
     """Make a single WHOAMI request and return the response time"""
+    # Generate unique request ID
+    request_id = str(uuid.uuid4())
+    
     start_time = time.time()
     success = False
     response_body = None
@@ -90,8 +94,13 @@ def whoami_request(config, ssl_context):
         request_url = '/webhdfs/v1/?op=WHOAMI'
         request_headers = {
             'x-sap-filecontainer': config['container'],
-            'Content-Type': 'application/json'
+            'Content-Type': 'application/json',
+            'X-Request-ID': request_id
         }
+        
+        # Log request details in debug mode
+        if config.get('debug', False):
+            logger.debug(f"Request ID: {request_id} | URL: {request_url} | Headers: {request_headers}")
         
         connection = http.client.HTTPSConnection(
             config['files_rest_api'], 
@@ -113,13 +122,6 @@ def whoami_request(config, ssl_context):
         if 200 <= status_code < 300:
             success = True
         
-        # Print debug information if debug mode is enabled
-        if config.get('debug', False):
-            logger.debug(f"Request URL: {request_url}")
-            logger.debug(f"Headers: {request_headers}")
-            logger.debug(f"Status Code: {status_code}")
-            logger.debug(f"Response Body: {response_body}")
-        
         response.close()
     except Exception as e:
         logger.error(f"Request error: {e}")
@@ -129,11 +131,16 @@ def whoami_request(config, ssl_context):
         end_time = time.time()
         duration = (end_time - start_time) * 1000  # Convert to milliseconds
         
+        # Log response details in debug mode
+        if config.get('debug', False):
+            logger.debug(f"Request ID: {request_id} | Duration: {duration:.2f}ms | Status: {status_code} | Response: {response_body}")
+        
     return {
         'duration_ms': duration,
         'success': success,
         'status_code': status_code,
-        'response': response_body
+        'response': response_body,
+        'request_id': request_id
     }
 
 def run_batch_test(config):
@@ -156,7 +163,7 @@ def run_batch_test(config):
         if result['success']:
             successful_requests += 1
         elif config.get('debug', False):
-            logger.debug(f"Request {i+1} failed with status code {result['status_code']}")
+            logger.debug(f"Request {i+1} (ID: {result['request_id']}) failed with status code {result['status_code']}")
             
     test_end_time = time.time()
     total_test_duration = test_end_time - test_start_time
@@ -167,7 +174,7 @@ def run_batch_test(config):
         if failed_requests:
             logger.debug(f"Total failed requests: {len(failed_requests)}")
             for i, req in enumerate(failed_requests[:5]):  # Show first 5 failed requests
-                logger.debug(f"Failed request {i+1}: Status code: {req['status_code']}, Response: {req['response'][:200]}...")
+                logger.debug(f"Failed request {i+1} (ID: {req['request_id']}): Status code: {req['status_code']}, Duration: {req['duration_ms']:.2f}ms, Response: {req['response'][:200]}...")
             if len(failed_requests) > 5:
                 logger.debug(f"... and {len(failed_requests) - 5} more failures")
     
@@ -291,3 +298,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+    

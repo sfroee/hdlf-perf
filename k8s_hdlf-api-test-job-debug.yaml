@@ -19,7 +19,7 @@ spec:
         fsGroup: 1000
       containers:
       - name: hdlf-api-test
-        image: sfroee/hdlf-api-test@sha256:2e16baf7f3c56988f3f607a6f5902c11bcb3b3a1f892114ff9398117c8d227c4
+        image: sfroee/hdlf-api-test@sha256:1d3194dc4931fc2ccc5fa826302bcf17a9c1215a7f4c5b9c51932466eaf952a6
         imagePullPolicy: IfNotPresent
         securityContext:
           runAsNonRoot: true
