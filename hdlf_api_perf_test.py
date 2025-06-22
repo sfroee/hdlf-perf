@@ -74,7 +74,24 @@ def create_ssl_context(config):
         context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
         context.check_hostname = False
         context.verify_mode = ssl.CERT_NONE
-        context.load_cert_chain(certfile=config['crt_path'], keyfile=config['key_path'])
+        
+        # Add debug logging for certificate paths
+        cert_path = config['crt_path']
+        abs_cert_path = os.path.abspath(cert_path)
+        key_path = config['key_path']
+        abs_key_path = os.path.abspath(key_path)
+        
+        logger.debug(f"Loading certificates from:")
+        logger.debug(f"Certificate file (crt_path): {cert_path}")
+        logger.debug(f"Key file (key_path): {key_path}")
+        
+        # Check if files exist
+        if not os.path.exists(abs_cert_path):
+            logger.error(f"Certificate file does not exist: {abs_cert_path}")
+        if not os.path.exists(abs_key_path):
+            logger.error(f"Key file does not exist: {abs_key_path}")
+            
+        context.load_cert_chain(certfile=cert_path, keyfile=key_path)
         return context
     except Exception as e:
         logger.error(f"Error creating SSL context: {e}")
@@ -151,6 +168,17 @@ def run_batch_test(config):
     results = []
     successful_requests = 0
     
+    # Perform a warmup request first
+    logger.info("Performing warmup request (will be excluded from statistics)...")
+    warmup_result = whoami_request(config, ssl_context)
+    warmup_result['is_warmup'] = True
+    results.append(warmup_result)
+    
+    if warmup_result['success']:
+        logger.info(f"Warmup request completed in {warmup_result['duration_ms']:.2f}ms")
+    else:
+        logger.warning(f"Warmup request failed with status code {warmup_result['status_code']}")
+    
     test_start_time = time.time()
     
     for i in range(config['num_requests']):
@@ -158,6 +186,7 @@ def run_batch_test(config):
             logger.info(f"Completed {i} requests...")
             
         result = whoami_request(config, ssl_context)
+        result['is_warmup'] = False
         results.append(result)
         
         if result['success']:
@@ -186,7 +215,8 @@ def run_batch_test(config):
 
 def calculate_statistics(test_results):
     """Calculate statistics from test results"""
-    durations = [r['duration_ms'] for r in test_results['results'] if r['success']]
+    # Exclude warmup request from statistics
+    durations = [r['duration_ms'] for r in test_results['results'] if r['success'] and not r.get('is_warmup', False)]
     
     if not durations:
         logger.error("No successful requests to calculate statistics from!")
@@ -211,6 +241,13 @@ def calculate_statistics(test_results):
     
     success_rate = (test_results['successful_requests'] / len(test_results['results'])) * 100
     
+    # Count actual test requests (excluding warmup)
+    actual_requests = [r for r in test_results['results'] if not r.get('is_warmup', False)]
+    actual_successful_requests = sum(1 for r in actual_requests if r['success'])
+    
+    # Calculate actual success rate
+    actual_success_rate = (actual_successful_requests / len(actual_requests)) * 100 if actual_requests else 0
+    
     return {
         'mean_ms': mean,
         'median_ms': median,
@@ -220,10 +257,11 @@ def calculate_statistics(test_results):
         'min_ms': min_duration,
         'max_ms': max_duration,
         'requests_per_second': requests_per_second,
-        'success_rate': success_rate,
-        'total_requests': len(test_results['results']),
-        'successful_requests': test_results['successful_requests'],
-        'total_duration_seconds': test_results['total_test_duration']
+        'success_rate': actual_success_rate,
+        'total_requests': len(actual_requests),
+        'successful_requests': actual_successful_requests,
+        'total_duration_seconds': test_results['total_test_duration'],
+        'warmup_request_ms': next((r['duration_ms'] for r in test_results['results'] if r.get('is_warmup', False)), None)
     }
 
 def save_results(statistics, config):
@@ -253,6 +291,8 @@ def display_results(statistics):
     logger.info("\n" + "="*50)
     logger.info("HDLF API WHOAMI PERFORMANCE TEST RESULTS")
     logger.info("="*50)
+    if statistics.get('warmup_request_ms') is not None:
+        logger.info(f"Warmup Request Duration: {statistics['warmup_request_ms']:.2f} ms (excluded from statistics)")
     logger.info(f"Total Requests: {statistics['total_requests']}")
     logger.info(f"Successful Requests: {statistics['successful_requests']}")
     logger.info(f"Success Rate: {statistics['success_rate']:.2f}%")
@@ -298,4 +338,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    

@@ -11,8 +11,8 @@ data:
     {
       "files_rest_api": "your-hdl-instance.files.your-hdl-cluster-endpoint",
       "container": "your-container-id",
-      "crt_path": "/certs/client.crt",
-      "key_path": "/certs/client.key",
+      "crt_path": "/certs/tls.crt",
+      "key_path": "/certs/tls.key",
       "num_requests": 1000,
       "port": 443,
       "output_path": "/data/results.json",

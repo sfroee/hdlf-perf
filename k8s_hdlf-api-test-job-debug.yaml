@@ -19,7 +19,7 @@ spec:
         fsGroup: 1000
       containers:
       - name: hdlf-api-test
-        image: sfroee/hdlf-api-test@sha256:1d3194dc4931fc2ccc5fa826302bcf17a9c1215a7f4c5b9c51932466eaf952a6
+        image: sfroee/hdlf-api-test@sha256:b369ffc566e381363a889c4c049ba824406636fdcf4b7d7db11c44d545f7783a
         imagePullPolicy: IfNotPresent
         securityContext:
           runAsNonRoot: true
@@ -27,7 +27,6 @@ spec:
           capabilities:
             drop:
               - ALL
-        command: ["python3", "/app/hdlf_api_perf_test.py"]
         env:
         - name: FILES_REST_API
           valueFrom:

@@ -19,8 +19,8 @@ RUN mkdir -p /config /data /certs
 # Set environment variables with defaults to be overridden at runtime
 ENV FILES_REST_API=""
 ENV CONTAINER=""
-ENV CRT_PATH="/certs/client.crt"
-ENV KEY_PATH="/certs/client.key"
+ENV CRT_PATH="/certs/tls.crt"
+ENV KEY_PATH="/certs/tls.key"
 ENV NUM_REQUESTS="1000"
 ENV CONFIG_FILE="/config/config.json"
 ENV OUTPUT_PATH="/data/results.json"
