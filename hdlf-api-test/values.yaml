@@ -1,0 +1,110 @@
+# Default values for hdlf-api-test.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+# Image configuration
+image:
+  repository: sfroee/hdlf-api-test
+  tag: "latest"
+  # Use the SHA256 digest for production deployments
+  digest: "sha256:b369ffc566e381363a889c4c049ba824406636fdcf4b7d7db11c44d545f7783a"
+  pullPolicy: IfNotPresent
+
+# HDLF API configuration
+hdlf:
+  # HDLF instance endpoint
+  filesRestApi: "your-hdl-instance.files.your-hdl-cluster-endpoint"
+  # Container ID
+  container: "your-container-id"
+  # Number of requests to make
+  numRequests: 1000
+  # Debug mode
+  debug: false
+  # API port
+  port: 443
+  # Output path for results
+  outputPath: "/data/results.json"
+  # Certificate paths
+  certPath: "/certs/client.crt"
+  keyPath: "/certs/client.key"
+
+# Certificate configuration
+certificate:
+  # Whether to create a Certificate resource
+  create: false
+  # Subject for the certificate
+  subject: "CN=hdlf-api-test,O=SAP SE,C=DE"
+  # Issuer reference
+  issuerRef:
+    group: "btp-certificate-issuer.btp.sap.com"
+    kind: "Issuer"
+    name: "btp-cert-svc-issuer"
+
+# Secret configuration
+secret:
+  # Whether to create a Secret resource
+  create: false
+  # Base64-encoded certificate and key
+  # These are placeholders and should be replaced with actual values
+  clientCrt: ""
+  clientKey: ""
+
+# PVC configuration
+persistence:
+  # Size of the PVC
+  size: 50Mi
+  # Storage class name
+  storageClassName: "default"
+  # Access modes
+  accessModes:
+    - ReadWriteOnce
+
+# Job configuration
+job:
+  # Whether to create a Job resource
+  create: true
+  # Whether to create a debug Job resource
+  createDebug: false
+  # TTL seconds after finished
+  ttlSecondsAfterFinished: 86400
+  # Backoff limit
+  backoffLimit: 3
+  # Resource requests and limits
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "256Mi"
+    limits:
+      cpu: "1"
+      memory: "512Mi"
+
+# CronJob configuration
+cronjob:
+  # Whether to create a CronJob resource
+  create: false
+  # Schedule for the CronJob
+  schedule: "@every 57m"
+  # Concurrency policy
+  concurrencyPolicy: "Forbid"
+  # History limits
+  successfulJobsHistoryLimit: 2
+  failedJobsHistoryLimit: 3
+
+# Result extraction pod configuration
+resultExtractionPod:
+  # Whether to create a result extraction Pod resource
+  create: false
+  # Time to live in seconds
+  timeToLive: 3600
+
+# Security context
+securityContext:
+  runAsNonRoot: true
+  runAsUser: 1000
+  runAsGroup: 1000
+  fsGroup: 1000
+  container:
+    allowPrivilegeEscalation: false
+    capabilities:
+      drop:
+        - ALL

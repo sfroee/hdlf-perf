@@ -1,0 +1,32 @@
+{{- if .Values.resultExtractionPod.create }}
+apiVersion: v1
+kind: Pod
+metadata:
+  name: results-reader
+  labels:
+    {{- include "hdlf-api-test.labels" . | nindent 4 }}
+spec:
+  securityContext:
+    runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+    runAsUser: {{ .Values.securityContext.runAsUser }}
+    runAsGroup: {{ .Values.securityContext.runAsGroup }}
+    fsGroup: {{ .Values.securityContext.fsGroup }}
+  containers:
+  - name: results-reader
+    image: busybox:1.36
+    securityContext:
+      runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+      allowPrivilegeEscalation: {{ .Values.securityContext.container.allowPrivilegeEscalation }}
+      capabilities:
+        drop:
+        {{- toYaml .Values.securityContext.container.capabilities.drop | nindent 10 }}
+    command: ["sleep", "{{ .Values.resultExtractionPod.timeToLive }}"]
+    volumeMounts:
+    - name: results-volume
+      mountPath: /data
+  volumes:
+  - name: results-volume
+    persistentVolumeClaim:
+      claimName: hdlf-api-test-results-pvc
+  restartPolicy: Never
+{{- end }}

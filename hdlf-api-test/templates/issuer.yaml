@@ -1,0 +1,9 @@
+{{- if .Values.certificate.create }}
+apiVersion: btp-certificate-issuer.btp.sap.com/v1alpha1
+kind: Issuer
+metadata:
+  name: btp-cert-svc-issuer
+  labels:
+    {{- include "hdlf-api-test.labels" . | nindent 4 }}
+spec: {}
+{{- end }}

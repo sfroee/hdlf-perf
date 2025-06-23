@@ -1,0 +1,80 @@
+{{- if .Values.job.create }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: hdlf-api-test-job
+  labels:
+    {{- include "hdlf-api-test.labels" . | nindent 4 }}
+    app: hdlf-api-test
+spec:
+  ttlSecondsAfterFinished: {{ .Values.job.ttlSecondsAfterFinished }}
+  template:
+    metadata:
+      labels:
+        {{- include "hdlf-api-test.labels" . | nindent 8 }}
+        app: hdlf-api-test
+        job-name: hdlf-api-test-job
+    spec:
+      securityContext:
+        runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+        runAsUser: {{ .Values.securityContext.runAsUser }}
+        runAsGroup: {{ .Values.securityContext.runAsGroup }}
+        fsGroup: {{ .Values.securityContext.fsGroup }}
+      containers:
+      - name: hdlf-api-test
+        image: {{ include "hdlf-api-test.image" . }}
+        imagePullPolicy: {{ .Values.image.pullPolicy }}
+        securityContext:
+          runAsNonRoot: {{ .Values.securityContext.runAsNonRoot }}
+          allowPrivilegeEscalation: {{ .Values.securityContext.container.allowPrivilegeEscalation }}
+          capabilities:
+            drop:
+            {{- toYaml .Values.securityContext.container.capabilities.drop | nindent 14 }}
+        resources:
+          {{- toYaml .Values.job.resources | nindent 10 }}
+        volumeMounts:
+        - name: config-volume
+          mountPath: /config
+        - name: certs-volume
+          mountPath: /certs
+          readOnly: true
+        - name: results-volume
+          mountPath: /data
+        env:
+        - name: FILES_REST_API
+          valueFrom:
+            configMapKeyRef:
+              name: hdlf-api-test-config
+              key: files_rest_api
+              optional: true
+        - name: CONTAINER
+          valueFrom:
+            configMapKeyRef:
+              name: hdlf-api-test-config
+              key: container
+              optional: true
+        - name: NUM_REQUESTS
+          valueFrom:
+            configMapKeyRef:
+              name: hdlf-api-test-config
+              key: num_requests
+              optional: true
+        - name: DEBUG
+          valueFrom:
+            configMapKeyRef:
+              name: hdlf-api-test-config
+              key: debug
+              optional: true
+      volumes:
+      - name: config-volume
+        configMap:
+          name: hdlf-api-test-config
+      - name: certs-volume
+        secret:
+          secretName: hdlf-api-certs
+      - name: results-volume
+        persistentVolumeClaim:
+          claimName: hdlf-api-test-results-pvc
+      restartPolicy: Never
+  backoffLimit: {{ .Values.job.backoffLimit }}
+{{- end }}

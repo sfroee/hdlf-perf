@@ -15,6 +15,33 @@ This tool tests the performance of the HDLF API's WHOAMI operation by making req
   - `k8s_pvc.yaml` - PersistentVolumeClaim for storing results
   - `k8s_cronjob.yaml` - CronJob for scheduled testing (optional)
   - `result_extraction_pod.yaml` - Pod for accessing test results
+- Helm chart:
+  - `hdlf-api-test/` - Helm chart for easy deployment and configuration
+
+## Installation Options
+
+You can deploy this tool using either the raw Kubernetes manifests or the Helm chart.
+
+### Option 1: Using Helm Chart (Recommended)
+
+The Helm chart provides an easy way to deploy and configure the HDLF API Performance Testing tool with a single command.
+
+```bash
+# Install with default values
+helm install hdlf-test ./hdlf-api-test
+
+# Install with landscape-specific values
+helm install hdlf-test ./hdlf-api-test -f hdlf-api-test/values-eu10.yaml
+
+# Install with custom values
+helm install hdlf-test ./hdlf-api-test --set hdlf.filesRestApi=your-hdl-instance.files.your-hdl-cluster-endpoint --set hdlf.container=your-container-id
+```
+
+For detailed information about the Helm chart, see the [Helm Chart README](./hdlf-api-test/README.md).
+
+### Option 2: Using Kubernetes Manifests Directly
+
+Follow the steps below to deploy using the raw Kubernetes manifests.
 
 ## Step 1: Set up your environment
 
@@ -41,8 +68,8 @@ Ensure you have:
        {
          "files_rest_api": "your-hdl-instance.files.your-hdl-cluster-endpoint",
          "container": "your-container-id",
-         "crt_path": "/certs/client.crt",
-         "key_path": "/certs/client.key",
+         "crt_path": "/certs/tls.crt",
+         "key_path": "/certs/tls.key",
          "num_requests": 1000,
          "port": 443,
          "output_path": "/data/results.json",
@@ -78,8 +105,8 @@ Ensure you have:
    **Option A**: Using kubectl create command:
    ```bash
    kubectl create secret generic hdlf-api-certs \
-     --from-file=client.crt=/path/to/your/client.crt \
-     --from-file=client.key=/path/to/your/client.key
+     --from-file=tls.crt=/path/to/your/client.crt \
+     --from-file=tls.key=/path/to/your/client.key
    ```
    
    **Option B**: Edit the k8s_secret.yaml file directly with base64-encoded certificates:
@@ -182,7 +209,7 @@ Key statistics include:
    - Set the `NUM_REQUESTS` environment variable in the job YAML
    - Use the debug job for a smaller batch of requests (10)
 
-2. **Running on a schedule**: Use the CronJob definition and adjust the schedule as needed (default is daily at midnight).
+2. **Running on a schedule**: Use the CronJob definition and adjust the schedule as needed (default is every 57 minutes).
 
 3. **Saving results with timestamps**: The script automatically adds timestamps to result filenames if they don't already have one.
 

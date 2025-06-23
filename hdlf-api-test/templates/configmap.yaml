@@ -1,0 +1,22 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: hdlf-api-test-config
+  labels:
+    {{- include "hdlf-api-test.labels" . | nindent 4 }}
+data:
+  files_rest_api: {{ .Values.hdlf.filesRestApi | quote }}
+  container: {{ .Values.hdlf.container | quote }}
+  num_requests: {{ .Values.hdlf.numRequests | quote }}
+  debug: {{ .Values.hdlf.debug | quote }}
+  config.json: |
+    {
+      "files_rest_api": {{ .Values.hdlf.filesRestApi | quote }},
+      "container": {{ .Values.hdlf.container | quote }},
+      "crt_path": {{ .Values.hdlf.certPath | quote }},
+      "key_path": {{ .Values.hdlf.keyPath | quote }},
+      "num_requests": {{ .Values.hdlf.numRequests }},
+      "port": {{ .Values.hdlf.port }},
+      "output_path": {{ .Values.hdlf.outputPath | quote }},
+      "debug": {{ .Values.hdlf.debug }}
+    }

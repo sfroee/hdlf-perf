@@ -1,0 +1,26 @@
+{{- if .Values.certificate.create }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: hdlf-api-certs
+  labels:
+    {{- include "hdlf-api-test.labels" . | nindent 4 }}
+spec:
+  issuerRef:
+    group: {{ .Values.certificate.issuerRef.group }}
+    kind: {{ .Values.certificate.issuerRef.kind }}
+    name: {{ .Values.certificate.issuerRef.name }}
+  literalSubject: >-
+    {{ .Values.certificate.subject }}
+  privateKey:
+    algorithm: RSA
+    encoding: PKCS1
+    rotationPolicy: Always
+    size: 2048
+  revisionHistoryLimit: 5
+  secretName: hdlf-api-certs
+  usages:
+    - digital signature
+    - key encipherment
+    - client auth
+{{- end }}
