@@ -2,6 +2,7 @@ apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
   name: hdlf-api-test-results-pvc
+  namespace: {{ .Values.namespace.name }}
   labels:
     {{- include "hdlf-api-test.labels" . | nindent 4 }}
 spec:

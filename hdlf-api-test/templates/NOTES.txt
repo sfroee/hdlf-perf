@@ -2,6 +2,7 @@ Thank you for installing {{ .Chart.Name }}.
 
 Your HDLF API Performance Test has been deployed with the following configuration:
 
+Namespace: {{ .Values.namespace.name }}
 HDLF Instance: {{ .Values.hdlf.filesRestApi }}
 Container ID: {{ .Values.hdlf.container }}
 Number of requests: {{ .Values.hdlf.numRequests }}
@@ -11,26 +12,26 @@ Debug mode: {{ .Values.hdlf.debug }}
 A job has been created to run the performance test once.
 You can check its status with:
 
-  kubectl get jobs
-  kubectl get pods -l job-name=hdlf-api-test-job
-  kubectl logs -f job/hdlf-api-test-job
+  kubectl get jobs -n {{ .Values.namespace.name }}
+  kubectl get pods -n {{ .Values.namespace.name }} -l job-name=hdlf-api-test-job
+  kubectl logs -n {{ .Values.namespace.name }} -f job/hdlf-api-test-job
 {{- end }}
 
 {{- if .Values.job.createDebug }}
 A debug job has been created with a smaller batch size (10 requests) and debug mode enabled.
 You can check its status with:
 
-  kubectl get jobs
-  kubectl get pods -l job-name=hdlf-api-test-debug-job
-  kubectl logs -f job/hdlf-api-test-debug-job
+  kubectl get jobs -n {{ .Values.namespace.name }}
+  kubectl get pods -n {{ .Values.namespace.name }} -l job-name=hdlf-api-test-debug-job
+  kubectl logs -n {{ .Values.namespace.name }} -f job/hdlf-api-test-debug-job
 {{- end }}
 
 {{- if .Values.cronjob.create }}
 A cronjob has been created to run the performance test on schedule: {{ .Values.cronjob.schedule }}
 You can check its status with:
 
-  kubectl get cronjobs
-  kubectl get jobs
+  kubectl get cronjobs -n {{ .Values.namespace.name }}
+  kubectl get jobs -n {{ .Values.namespace.name }}
 {{- end }}
 
 To access the test results:
@@ -38,15 +39,19 @@ To access the test results:
 {{- if .Values.resultExtractionPod.create }}
 A results reader pod has been created. You can copy the results with:
 
-  kubectl cp results-reader:/data/ ./results/
+  kubectl cp -n {{ .Values.namespace.name }} results-reader:/data/ ./results/
 {{- else }}
 You can create a results reader pod to access the results:
 
-  kubectl apply -f result-extraction-pod.yaml
+  kubectl apply -n {{ .Values.namespace.name }} -f result-extraction-pod.yaml
 
 Then copy the results:
 
-  kubectl cp results-reader:/data/ ./results/
+  kubectl cp -n {{ .Values.namespace.name }} results-reader:/data/ ./results/
 {{- end }}
 
 For more information, please refer to the README.md file.
+
+To uninstall the chart:
+
+  helm uninstall {{ .Release.Name }}

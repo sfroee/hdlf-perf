@@ -7,7 +7,7 @@ This Helm chart deploys the HDLF API Performance Testing tool, which tests the p
 - Kubernetes 1.16+
 - Helm 3.0+
 - Access to a Kubernetes cluster
-- HDLF API client certificates (if not using the certificate resource)
+- Custom cert-manager issuer controller in the Kubernetes cluster (for automatic certificate generation)
 
 ## Installing the Chart
 
@@ -24,12 +24,20 @@ helm install hdlf-test ./hdlf-api-test -f values-custom.yaml
 helm install hdlf-test ./hdlf-api-test -f values-eu10.yaml
 ```
 
+By default, the chart will create a namespace called `hdlf-perf` and deploy all resources into this namespace.
+
 ## Uninstalling the Chart
 
 To uninstall/delete the `hdlf-test` deployment:
 
 ```bash
-helm delete hdlf-test
+helm uninstall hdlf-test
+```
+
+Note that this will not delete the namespace. If you want to delete the namespace as well, you can run:
+
+```bash
+kubectl delete namespace hdlf-perf
 ```
 
 ## Configuration
@@ -38,6 +46,8 @@ The following table lists the configurable parameters of the HDLF API Performanc
 
 | Parameter | Description | Default |
 | --------- | ----------- | ------- |
+| `namespace.create` | Whether to create a namespace | `true` |
+| `namespace.name` | Name of the namespace | `hdlf-perf` |
 | `image.repository` | Image repository | `sfroee/hdlf-api-test` |
 | `image.tag` | Image tag | `latest` |
 | `image.digest` | Image digest (recommended for production) | `sha256:b369ffc566e381363a889c4c049ba824406636fdcf4b7d7db11c44d545f7783a` |
@@ -50,14 +60,11 @@ The following table lists the configurable parameters of the HDLF API Performanc
 | `hdlf.outputPath` | Output path for results | `/data/results.json` |
 | `hdlf.certPath` | Certificate path | `/certs/client.crt` |
 | `hdlf.keyPath` | Key path | `/certs/client.key` |
-| `certificate.create` | Whether to create a Certificate resource | `false` |
+| `certificate.create` | Whether to create a Certificate resource | `true` |
 | `certificate.subject` | Subject for the certificate | `CN=hdlf-api-test,O=SAP SE,C=DE` |
 | `certificate.issuerRef.group` | Certificate issuer group | `btp-certificate-issuer.btp.sap.com` |
 | `certificate.issuerRef.kind` | Certificate issuer kind | `Issuer` |
 | `certificate.issuerRef.name` | Certificate issuer name | `btp-cert-svc-issuer` |
-| `secret.create` | Whether to create a Secret resource | `false` |
-| `secret.clientCrt` | Base64-encoded client certificate | `""` |
-| `secret.clientKey` | Base64-encoded client key | `""` |
 | `persistence.size` | Size of the PVC | `50Mi` |
 | `persistence.storageClassName` | Storage class name | `default` |
 | `persistence.accessModes` | Access modes | `[ReadWriteOnce]` |
@@ -94,13 +101,9 @@ You can create your own values files for other landscapes by copying and modifyi
 
 ## Certificate Management
 
-The chart supports three methods for managing certificates:
+The chart uses the Certificate resource to create a client certificate for authenticating with the HDLF API. The Certificate resource will create a Secret named `hdlf-api-certs` with the client certificate and key.
 
-1. **Using the Certificate resource**: Set `certificate.create=true` to create a Certificate resource that uses the BTP certificate issuer to generate client certificates.
-
-2. **Using an existing Secret**: If you already have a Secret with client certificates, you can use it directly. The Secret should have `client.crt` and `client.key` keys.
-
-3. **Creating a Secret with values**: Set `secret.create=true` and provide base64-encoded certificates in `secret.clientCrt` and `secret.clientKey`.
+The Certificate resource uses a BTP certificate issuer to generate the certificate. The issuer is created by the chart if `certificate.create` is set to `true`.
 
 ## Usage Examples
 
@@ -132,16 +135,11 @@ helm install hdlf-test ./hdlf-api-test \
   --set cronjob.schedule="0 0 * * *"
 ```
 
-### Using certificates from a Secret
+### Using a custom namespace
 
 ```bash
-# First create the secret with your certificates
-kubectl create secret generic hdlf-api-certs \
-  --from-file=client.crt=/path/to/your/client.crt \
-  --from-file=client.key=/path/to/your/client.key
-
-# Then install the chart
 helm install hdlf-test ./hdlf-api-test \
+  --set namespace.name=my-custom-namespace \
   --set hdlf.filesRestApi=your-hdl-instance.files.your-hdl-cluster-endpoint \
   --set hdlf.container=your-container-id
 ```
@@ -152,7 +150,6 @@ helm install hdlf-test ./hdlf-api-test \
 helm install hdlf-test ./hdlf-api-test \
   --set hdlf.filesRestApi=your-hdl-instance.files.your-hdl-cluster-endpoint \
   --set hdlf.container=your-container-id \
-  --set certificate.create=true \
   --set certificate.subject="CN=hdlf-api-test,O=SAP SE,C=DE"
 ```
 
@@ -170,7 +167,7 @@ helm install hdlf-test ./hdlf-api-test \
 Then copy the results:
 
 ```bash
-kubectl cp results-reader:/data/ ./results/
+kubectl cp -n hdlf-perf results-reader:/data/ ./results/
 ```
 
 ## Understanding the Results

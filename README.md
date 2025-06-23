@@ -1,6 +1,6 @@
 # HDLF API Performance Testing Tool
 
-This tool tests the performance of the HDLF API's WHOAMI operation by making requests and collecting statistics like average response time, 95th and 99th percentiles.
+This tool tests the performance of the HDLF API's WHOAMI operation by making requests and collecting statistics like average response time, 95th and 99th percentiles. The tool is packaged as a Helm chart for easy deployment and configuration.
 
 ## Files Included
 

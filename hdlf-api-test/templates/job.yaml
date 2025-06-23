@@ -3,6 +3,7 @@ apiVersion: batch/v1
 kind: Job
 metadata:
   name: hdlf-api-test-job
+  namespace: {{ .Values.namespace.name }}
   labels:
     {{- include "hdlf-api-test.labels" . | nindent 4 }}
     app: hdlf-api-test

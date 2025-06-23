@@ -2,6 +2,13 @@
 # This is a YAML-formatted file.
 # Declare variables to be passed into your templates.
 
+# Namespace configuration
+namespace:
+  # Whether to create a namespace
+  create: true
+  # Name of the namespace
+  name: "hdlf-perf"
+
 # Image configuration
 image:
   repository: sfroee/hdlf-api-test
@@ -31,7 +38,7 @@ hdlf:
 # Certificate configuration
 certificate:
   # Whether to create a Certificate resource
-  create: false
+  create: true
   # Subject for the certificate
   subject: "CN=hdlf-api-test,O=SAP SE,C=DE"
   # Issuer reference
@@ -39,15 +46,6 @@ certificate:
     group: "btp-certificate-issuer.btp.sap.com"
     kind: "Issuer"
     name: "btp-cert-svc-issuer"
-
-# Secret configuration
-secret:
-  # Whether to create a Secret resource
-  create: false
-  # Base64-encoded certificate and key
-  # These are placeholders and should be replaced with actual values
-  clientCrt: ""
-  clientKey: ""
 
 # PVC configuration
 persistence:

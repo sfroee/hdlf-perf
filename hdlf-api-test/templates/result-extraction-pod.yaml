@@ -3,6 +3,7 @@ apiVersion: v1
 kind: Pod
 metadata:
   name: results-reader
+  namespace: {{ .Values.namespace.name }}
   labels:
     {{- include "hdlf-api-test.labels" . | nindent 4 }}
 spec:
