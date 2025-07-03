@@ -14,7 +14,7 @@ image:
   repository: sfroee/hdlf-api-test
   tag: "latest"
   # Use the SHA256 digest for production deployments
-  digest: "sha256:b369ffc566e381363a889c4c049ba824406636fdcf4b7d7db11c44d545f7783a"
+  digest: "sha256:bfbfc6fe067763eefb53b82c5c0a1ecb0fb2b11e0d05b4afe37ab5309913ed5b"
   pullPolicy: IfNotPresent
 
 # HDLF API configuration
@@ -24,16 +24,20 @@ hdlf:
   # Container ID
   container: "your-container-id"
   # Number of requests to make
-  numRequests: 1000
+  numRequests: 2
   # Debug mode
-  debug: false
+  debug: true
   # API port
   port: 443
   # Output path for results
   outputPath: "/data/results.json"
   # Certificate paths
-  certPath: "/certs/client.crt"
-  keyPath: "/certs/client.key"
+  certPath: "/certs/tls.crt"
+  keyPath: "/certs/tls.key"
+  # File path for file fetch test
+  filePath: "/your-app-version-id/file-path"
+  # Test type (options: whoami, file, both)
+  testType: "whoami"
 
 # Certificate configuration
 certificate:
@@ -60,13 +64,13 @@ persistence:
 # Job configuration
 job:
   # Whether to create a Job resource
-  create: true
+  create: false
   # Whether to create a debug Job resource
   createDebug: false
   # TTL seconds after finished
   ttlSecondsAfterFinished: 86400
   # Backoff limit
-  backoffLimit: 3
+  backoffLimit: 2
   # Resource requests and limits
   resources:
     requests:
@@ -79,9 +83,9 @@ job:
 # CronJob configuration
 cronjob:
   # Whether to create a CronJob resource
-  create: false
+  create: true
   # Schedule for the CronJob
-  schedule: "@every 57m"
+  schedule: "@every 1m"
   # Concurrency policy
   concurrencyPolicy: "Forbid"
   # History limits

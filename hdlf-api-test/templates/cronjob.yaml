@@ -71,6 +71,18 @@ spec:
                   name: hdlf-api-test-config
                   key: debug
                   optional: true
+            - name: FILE_PATH
+              valueFrom:
+                configMapKeyRef:
+                  name: hdlf-api-test-config
+                  key: file_path
+                  optional: true
+            - name: TEST_TYPE
+              valueFrom:
+                configMapKeyRef:
+                  name: hdlf-api-test-config
+                  key: test_type
+                  optional: true
           volumes:
           - name: config-volume
             configMap:

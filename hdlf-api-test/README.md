@@ -26,6 +26,29 @@ helm install hdlf-test ./hdlf-api-test -f values-eu10.yaml
 
 By default, the chart will create a namespace called `hdlf-perf` and deploy all resources into this namespace.
 
+
+## Using Multiple Values Files
+
+Helm allows you to combine multiple values files to customize your deployment. This is useful when you want to use a general `values.yaml` for defaults and a landscape-specific file (e.g., `values-eu10.yaml`) for overrides.
+
+When specifying multiple files, values in later files override those in earlier files. For example:
+
+```bash
+helm install hdlf-test ./hdlf-api-test -f values.yaml -f values-eu10.yaml
+```
+
+Or, to upgrade an existing release:
+
+```bash
+helm upgrade hdlf-test ./hdlf-api-test -f values.yaml -f values-eu10.yaml
+```
+
+**Note:**  
+- If your landscape-specific file only contains overrides, always provide both the default and the landscape file.
+- If your landscape-specific file is fully self-contained (contains all required values), you may use only that file.
+
+This approach helps you maintain a clean separation between common defaults and environment-specific settings.
+
 ## Uninstalling the Chart
 
 To uninstall/delete the `hdlf-test` deployment:

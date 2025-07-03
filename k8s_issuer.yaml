@@ -1,5 +1,0 @@
-apiVersion: btp-certificate-issuer.btp.sap.com/v1alpha1
-kind: Issuer
-metadata:
-  name: btp-cert-svc-issuer
-spec: {}

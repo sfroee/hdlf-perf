@@ -60,6 +60,20 @@ spec:
         # Enable debug mode
         - name: DEBUG
           value: "true"
+        # File path for file fetch test
+        - name: FILE_PATH
+          valueFrom:
+            configMapKeyRef:
+              name: hdlf-api-test-config
+              key: file_path
+              optional: true
+        # Test type (whoami, file, both)
+        - name: TEST_TYPE
+          valueFrom:
+            configMapKeyRef:
+              name: hdlf-api-test-config
+              key: test_type
+              optional: true
       volumes:
       - name: config-volume
         configMap:
